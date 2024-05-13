@@ -1,0 +1,231 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use ieee.numeric_std.ALL;
+use ieee.std_logic_unsigned.all;
+
+entity project_reti_logiche is
+port (
+i_clk : in std_logic;
+i_rst : in std_logic;
+i_start : in std_logic;
+i_w : in std_logic;
+o_z0 : out std_logic_vector(7 downto 0);
+o_z1 : out std_logic_vector(7 downto 0);
+o_z2 : out std_logic_vector(7 downto 0);
+o_z3 : out std_logic_vector(7 downto 0);
+o_done : out std_logic;
+o_mem_addr : out std_logic_vector(15 downto 0);
+i_mem_data : in std_logic_vector(7 downto 0);
+o_mem_we : out std_logic;
+o_mem_en : out std_logic
+);
+end project_reti_logiche;
+
+architecture Behavioral of project_reti_logiche is
+ type state_type is (S0,S1,S2,S3,Statofine,S4,S6);
+ signal state : state_type;
+ signal address : std_logic_vector(15 downto 0);
+ signal canale_uscita : std_logic_vector (1 downto 0);
+ signal copiaZ0 : std_logic_vector (7 downto 0);
+ signal copiaZ1 : std_logic_vector (7 downto 0);
+ signal copiaZ2 : std_logic_vector (7 downto 0);
+ signal copiaZ3 : std_logic_vector (7 downto 0);
+ 
+ 
+ begin
+ process ( i_clk, i_rst)
+ begin
+ 
+ if i_rst= '1' then
+ o_mem_we <= '0';
+ o_mem_en <= '0';
+ o_done <= '0';
+ copiaZ0 <= "00000000";
+ copiaZ1 <= "00000000"; 
+ copiaZ2 <= "00000000";
+ copiaZ3 <= "00000000";
+ o_z0 <= "00000000";
+ o_z1 <= "00000000";
+ o_z2 <= "00000000";
+ o_z3 <= "00000000";
+ address <= "0000000000000000";
+ state <= S0;
+ elsif i_clk'event and i_clk = '1' then
+   if state = S0 then
+      o_z0 <= "00000000";
+      o_z1 <= "00000000";
+      o_z2 <= "00000000"; 
+      o_z3 <= "00000000";    
+    if i_start = '1' then
+       canale_uscita <= '0' & i_w;
+       o_done <= '0';
+       o_mem_we <= '0';
+       o_mem_en <= '0';
+       state <= S1;
+     else
+       state <= S0;
+     end if;
+     elsif state = S1 then 
+      o_done <= '0';
+      o_mem_we <= '0';
+      o_mem_en <= '0';
+      o_z0 <= "00000000";
+      o_z1 <= "00000000";
+      o_z2 <= "00000000";
+      o_z3 <= "00000000";
+      
+       canale_uscita <= canale_uscita(0)& i_w;
+       
+        state <= S2;
+
+       
+     elsif state = S2 then
+      o_done <= '0';
+      o_mem_we <= '0';
+      o_mem_en <= '0';
+      o_z0 <= "00000000";
+      o_z1 <= "00000000";
+      o_z2 <= "00000000";
+      o_z3 <= "00000000";
+     
+     
+     
+     
+     
+      
+       if i_start = '1' then
+       address <= "000000000000000" & i_w;
+       state <= S3;
+       else
+       o_mem_en <= '1';
+       o_mem_addr <= "0000000000000000";
+       state <= Statofine;
+       
+       end if;
+       
+       
+     elsif state = S3 then
+      o_done <= '0';
+      o_mem_we <= '0';
+      o_mem_en <= '0';
+      o_z0 <= "00000000";
+      o_z1 <= "00000000";
+      o_z2 <= "00000000";
+      o_z3 <= "00000000";
+     
+     
+     
+     
+     
+       
+       if i_start = '1' then
+       address <= address(14 downto 0) & i_w;
+       state <= S3;
+       else
+       state <= Statofine;
+       o_mem_en <= '1';
+       o_mem_addr <= address;
+       end if;
+      
+     elsif state = Statofine then
+      o_done <= '0';
+      o_mem_we <= '0';
+      o_z0 <= "00000000";
+      o_z1 <= "00000000";
+      o_z2 <= "00000000";
+      o_z3 <= "00000000";
+      
+     
+     
+      
+      o_mem_en <= '1';
+      state <= S4;
+      
+    
+      
+     elsif state= S4 then 
+      o_done <= '1';
+      o_mem_we <= '0';
+      o_mem_en <= '1';
+      
+     
+     
+     
+        if canale_uscita = "00" then
+         o_z0 <= i_mem_data;
+         copiaZ0 <= i_mem_data;
+         o_z1 <= copiaZ1;
+         o_z2 <= copiaZ2;
+         o_z3 <= copiaZ3;
+         
+       
+        elsif canale_uscita = "01" then
+        
+         o_z1 <= i_mem_data;
+         copiaZ1 <= i_mem_data;
+         o_z0 <= copiaZ0;
+         o_z2 <= copiaZ2;
+         o_z3 <= copiaZ3;
+        
+        elsif canale_uscita = "10" then
+         
+         o_z2 <= i_mem_data;
+         copiaZ2 <= i_mem_data;
+         o_z0 <= copiaZ0;
+         o_z1 <= copiaZ1;
+         o_z3 <= copiaZ3;
+        
+        else 
+         
+         o_Z3 <= i_mem_data;
+         copiaZ3 <= i_mem_data;
+         o_z1 <= copiaZ1;
+         o_z2 <= copiaZ2;
+         o_z0 <= copiaZ0;
+         
+         
+         
+        end if;
+         state <= S6;
+         
+     
+        
+       elsif state = S6 then
+       
+        o_done <= '0';
+      o_mem_we <= '0';
+      o_mem_en <= '0';
+      o_z0 <= "00000000";
+      o_z1 <= "00000000";
+      o_z2 <= "00000000";
+      o_z3 <= "00000000";
+       
+       
+        
+         state <= S0;
+       
+      
+   end if;
+   
+  end if;
+ 
+ end process;
+ 
+end Behavioral;
+         
+         
+     
+       
+      
+      
+      
+       
+        
+      
+       
+      
+      
+       
+       
+     
+
